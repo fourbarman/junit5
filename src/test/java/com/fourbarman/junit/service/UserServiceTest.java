@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * One class instance for every @Test method. @AfterAll and @BeforeAll can not be static.
  */
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class UserServiceTest {
+public class UserServiceTest {
 
     private UserService userService;
 
