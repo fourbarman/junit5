@@ -60,6 +60,17 @@ public class UserServiceTest {
     }
 
     @Test
+    void throwExceptionIfUsernameOrPasswordIsNull() {
+        assertAll(
+                () -> {
+                    var e = assertThrows(IllegalArgumentException.class, () -> userService.login(null, "dummy"));
+                    assertThat(e.getMessage()).isEqualTo("Username or password is null");
+                },
+                () -> assertThrows(IllegalArgumentException.class, () -> userService.login("dummy", null))
+        );
+    }
+
+    @Test
     void loginFailIfPasswordIsNotCorrect() {
         userService.add(IVAN);
         Optional<User> maybeUser = userService.login(IVAN.getUsername(), "dummy");
