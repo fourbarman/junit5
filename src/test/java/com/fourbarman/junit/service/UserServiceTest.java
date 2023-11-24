@@ -15,7 +15,14 @@ import static org.junit.jupiter.api.Assertions.*;
  * New class instance for every @Test method. @AfterAll and @BeforeAll should be static. Default behavior.
  * 2. TestInstance.Lifecycle.PER_CLASS
  * One class instance for every @Test method. @AfterAll and @BeforeAll can not be static.
+ *
+ * Tags.
+ * If needed to start tests with Tags by terminal, i.e.:
+ * "mvn clean test -Dgroups=login"
+ * Or
+ * "mvn clean test -DexcludedGroups=login"
  */
+@Tag("fast")
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 public class UserServiceTest {
 
@@ -51,6 +58,7 @@ public class UserServiceTest {
         assertThat(users).hasSize(2);
     }
 
+    @Tag("login")
     @Test
     void loginSuccessIfUserExists() {
         userService.add(IVAN);
@@ -59,6 +67,7 @@ public class UserServiceTest {
         maybeUser.ifPresent(user -> assertThat(user).isEqualTo(IVAN));
     }
 
+    @Tag("login")
     @Test
     void throwExceptionIfUsernameOrPasswordIsNull() {
         assertAll(
@@ -70,10 +79,20 @@ public class UserServiceTest {
         );
     }
 
+    @Tag("login")
     @Test
     void loginFailIfPasswordIsNotCorrect() {
         userService.add(IVAN);
         Optional<User> maybeUser = userService.login(IVAN.getUsername(), "dummy");
+        assertTrue(maybeUser.isEmpty());
+    }
+
+
+    @Tag("login")
+    @Test
+    void loginFailIfUserDoesNotExist() {
+        userService.add(IVAN);
+        Optional<User> maybeUser = userService.login("dummy", IVAN.getPassword());
         assertTrue(maybeUser.isEmpty());
     }
 
@@ -87,14 +106,6 @@ public class UserServiceTest {
                 () -> assertThat(users).containsValues(IVAN, PETR)
         );
     }
-
-    @Test
-    void loginFailIfUserDoesNotExist() {
-        userService.add(IVAN);
-        Optional<User> maybeUser = userService.login("dummy", IVAN.getPassword());
-        assertTrue(maybeUser.isEmpty());
-    }
-
     @AfterEach
     void deleteDataFromDatabase() {
         System.out.println("After each:" + this);
