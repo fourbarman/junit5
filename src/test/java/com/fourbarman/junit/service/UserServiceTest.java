@@ -4,8 +4,10 @@ import com.fourbarman.junit.dto.User;
 import org.junit.jupiter.api.*;
 
 
+import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -36,7 +38,7 @@ public class UserServiceTest {
     void usersEmptyIfNoUserAdded() {
         System.out.println("Test usersEmptyIfNoUserAdded:" + this);
         var users = userService.getAll();
-        assertTrue(users.isEmpty(), () -> "User list should be empty");
+        assertThat(users).isEmpty();
     }
 
     @Test
@@ -46,30 +48,38 @@ public class UserServiceTest {
         userService.add(PETR);
 
         var users = userService.getAll();
-        assertEquals(2, users.size());
+        assertThat(users).hasSize(2);
     }
 
     @Test
     void loginSuccessIfUserExists() {
         userService.add(IVAN);
         Optional<User> maybeUser = userService.login(IVAN.getUsername(), IVAN.getPassword());
-
-        assertTrue(maybeUser.isPresent());
-        maybeUser.ifPresent(user -> assertEquals(IVAN, user));
+        assertThat(maybeUser).isPresent();
+        maybeUser.ifPresent(user -> assertThat(user).isEqualTo(IVAN));
     }
 
     @Test
     void loginFailIfPasswordIsNotCorrect() {
         userService.add(IVAN);
         Optional<User> maybeUser = userService.login(IVAN.getUsername(), "dummy");
-
         assertTrue(maybeUser.isEmpty());
+    }
+
+    @Test
+    void usersConvertedToMapById() {
+        userService.add(IVAN, PETR);
+
+        Map<Integer, User> users = userService.getAllConvertedById();
+        assertAll(
+                () -> assertThat(users).containsKeys(IVAN.getId(), PETR.getId()),
+                () -> assertThat(users).containsValues(IVAN, PETR)
+        );
     }
 
     @Test
     void loginFailIfUserDoesNotExist() {
         userService.add(IVAN);
-
         Optional<User> maybeUser = userService.login("dummy", IVAN.getPassword());
         assertTrue(maybeUser.isEmpty());
     }
