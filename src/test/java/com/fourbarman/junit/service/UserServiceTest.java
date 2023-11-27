@@ -1,7 +1,9 @@
 package com.fourbarman.junit.service;
 
 import com.fourbarman.junit.dto.User;
+import com.fourbarman.junit.paramresolver.UserServiceParamResolver;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 
 import java.util.Map;
@@ -25,11 +27,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("fast")
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 @TestMethodOrder(MethodOrderer.DisplayName.class)
+@ExtendWith({
+        UserServiceParamResolver.class
+})
 public class UserServiceTest {
 
     private static final User IVAN = User.of(1, "Ivan", "123");
     private static final User PETR = User.of(2, "Petr", "111");
     private UserService userService;
+
+    UserServiceTest(TestInfo testInfo) {
+        System.out.println();
+    }
 
     @BeforeAll
     static void init() {
@@ -37,9 +46,9 @@ public class UserServiceTest {
     }
 
     @BeforeEach
-    void prepare() {
+    void prepare(UserService userService) {
         System.out.println("Before each:" + this);
-        userService = new UserService();
+        this.userService = userService;
     }
 
     @Test
@@ -52,7 +61,7 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("users size = 2 if two User added")
-    void userSizeIFUserAdded() {
+    void userSizeIFUserAdded(UserService userService) {
         System.out.println("Test userSizeIFUserAdded:" + this);
         userService.add(IVAN);
         userService.add(PETR);
