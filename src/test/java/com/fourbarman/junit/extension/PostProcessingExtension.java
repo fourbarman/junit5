@@ -15,7 +15,7 @@ public class PostProcessingExtension implements TestInstancePostProcessor {
         for(Field declaredField : declaredFields) {
             //don't do that, because @Getter is RetentionPolicy.Source and won't be seen at Runtime!
             if (declaredField.isAnnotationPresent(Getter.class)) {
-                declaredField.set(o, new UserService());
+                declaredField.set(o, new UserService(null));
             }
         }
     }

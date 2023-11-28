@@ -1,11 +1,13 @@
 package com.fourbarman.junit.service;
 
+import com.fourbarman.junit.dao.UserDao;
 import com.fourbarman.junit.dto.User;
 import com.fourbarman.junit.extension.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+import org.mockito.Mockito;
 
 
 import java.io.IOException;
@@ -36,12 +38,13 @@ import static org.junit.jupiter.api.Assertions.*;
         UserServiceParamResolver.class,
         PostProcessingExtension.class,
         ConditionalExtension.class,
-        ThrowableExtension.class
+        //ThrowableExtension.class
 })
 public class UserServiceTest extends TestBase {
 
     private static final User IVAN = User.of(1, "Ivan", "123");
     private static final User PETR = User.of(2, "Petr", "111");
+    private UserDao userDao;
     private UserService userService;
 
     UserServiceTest(TestInfo testInfo) {
@@ -54,15 +57,27 @@ public class UserServiceTest extends TestBase {
     }
 
     @BeforeEach
-    void prepare(UserService userService) {
+    void prepare() {
         System.out.println("Before each:" + this);
-        this.userService = userService;
+        this.userDao = Mockito.mock(UserDao.class);
+        this.userService = new UserService(userDao);
+    }
+
+    @Test
+    void shouldDeleteExistedUSer() {
+        userService.add(IVAN);
+        //works great with Spy.
+        Mockito.doReturn(true).when(userDao).delete(Mockito.any());
+        //this variant allows to chain return statement from Mock ".thenReturn().thenReturn()..."
+        Mockito.when(userDao.delete(Mockito.any())).thenReturn(true);
+        boolean deleteResult = userService.delete(IVAN.getId());
+        assertThat(deleteResult).isTrue();
     }
 
     @Test
     @DisplayName("users empty if no users added")
     void usersEmptyIfNoUserAdded() throws IOException {
-        if(true) {
+        if (true) {
             //throw new IOException(); this will throw IOException as implemented in ThrowableExtension!
             throw new RuntimeException();//this should pass!
         }
@@ -107,7 +122,7 @@ public class UserServiceTest extends TestBase {
     @Tag("login")
     @DisplayName("Test user login functionality")
     class LoginTest {
-//        @Test
+        //        @Test
         @RepeatedTest(value = 5, name = RepeatedTest.LONG_DISPLAY_NAME)
         // injected RepetitionInfo - can be used as info about repetitions of test
         void loginSuccessIfUserExists(RepetitionInfo repetitionInfo) {
@@ -118,9 +133,9 @@ public class UserServiceTest extends TestBase {
         }
 
         @Test
-                //Timeouts great for acceptance tests, and sometimes - for integration tests.
-        //@Timeout(value = 200L, unit = TimeUnit.MILLISECONDS) the same, but asserts are better to read & understand.
-         void checkLoginFunctionalityPerformance() {
+            //Timeouts great for acceptance tests, and sometimes - for integration tests.
+            //@Timeout(value = 200L, unit = TimeUnit.MILLISECONDS) the same, but asserts are better to read & understand.
+        void checkLoginFunctionalityPerformance() {
             Optional<User> maybeUser = assertTimeout(Duration.ofMillis(200L), () -> {
                 Thread.sleep(100L);
                 return userService.login(IVAN.getUsername(), IVAN.getPassword());
