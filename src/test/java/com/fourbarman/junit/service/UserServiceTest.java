@@ -4,10 +4,13 @@ import com.fourbarman.junit.dto.User;
 import com.fourbarman.junit.paramresolver.UserServiceParamResolver;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
 
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * New class instance for every @Test method. @AfterAll and @BeforeAll should be static. Default behavior.
  * 2. TestInstance.Lifecycle.PER_CLASS
  * One class instance for every @Test method. @AfterAll and @BeforeAll can not be static.
- *
+ * <p>
  * Tags.
  * If needed to start tests with Tags by terminal, i.e.:
  * "mvn clean test -Dgroups=login"
@@ -80,6 +83,7 @@ public class UserServiceTest {
                 () -> assertThat(users).containsValues(IVAN, PETR)
         );
     }
+
     @AfterEach
     void deleteDataFromDatabase() {
         System.out.println("After each:" + this);
@@ -89,6 +93,7 @@ public class UserServiceTest {
     static void closeConnectionPool() {
         System.out.println("After all:");
     }
+
     @Nested
     @Tag("login")
     @DisplayName("Test user login functionality")
@@ -126,5 +131,41 @@ public class UserServiceTest {
             Optional<User> maybeUser = userService.login("dummy", IVAN.getPassword());
             assertTrue(maybeUser.isEmpty());
         }
+
+        @ParameterizedTest(name = "{arguments} test")
+        //only for 1 argument
+        //@NullSource
+        //@EmptySource
+        //@ValueSource(strings = {
+        //        "Ivan", "Petr"
+        //})
+        //@ArgumentsSource()
+        //MethodSource(fullPathToClass#staticMethod)
+        //Params from .csv file
+        //@CsvFileSource(resources = "/login-test-data.csv", delimiter = ',', numLinesToSkip = 1)
+        //Params without csv file
+//        @CsvSource({
+//                "Ivan,123",
+//                "Petr,111"
+//        })
+        @MethodSource("com.fourbarman.junit.service.UserServiceTest#getArgumentsForLoginTest")
+        @DisplayName("login param test")
+        void loginParametrizedTest(String username, String password, Optional<User> user) {
+            userService.add(IVAN, PETR);
+
+            Optional<User> maybeUser = userService.login(username, password);
+
+            assertThat(maybeUser).isEqualTo(user);
+        }
+    }
+
+    //Method for MethodSource.
+    static Stream<Arguments> getArgumentsForLoginTest() {
+        return Stream.of(
+                Arguments.of("Ivan", "123", Optional.of(IVAN)),
+                Arguments.of("Petr", "111", Optional.of(PETR)),
+                Arguments.of("Petr", "dummy", Optional.empty()),
+                Arguments.of("dummy", "123", Optional.empty())
+        );
     }
 }
