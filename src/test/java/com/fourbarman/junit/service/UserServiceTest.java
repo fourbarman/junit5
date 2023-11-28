@@ -1,17 +1,17 @@
 package com.fourbarman.junit.service;
 
 import com.fourbarman.junit.dto.User;
-import com.fourbarman.junit.paramresolver.UserServiceParamResolver;
+import com.fourbarman.junit.extension.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -33,9 +33,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 @TestMethodOrder(MethodOrderer.DisplayName.class)
 @ExtendWith({
-        UserServiceParamResolver.class
+        UserServiceParamResolver.class,
+        PostProcessingExtension.class,
+        ConditionalExtension.class,
+        ThrowableExtension.class
 })
-public class UserServiceTest {
+public class UserServiceTest extends TestBase {
 
     private static final User IVAN = User.of(1, "Ivan", "123");
     private static final User PETR = User.of(2, "Petr", "111");
@@ -58,7 +61,11 @@ public class UserServiceTest {
 
     @Test
     @DisplayName("users empty if no users added")
-    void usersEmptyIfNoUserAdded() {
+    void usersEmptyIfNoUserAdded() throws IOException {
+        if(true) {
+            //throw new IOException(); this will throw IOException as implemented in ThrowableExtension!
+            throw new RuntimeException();//this should pass!
+        }
         System.out.println("Test usersEmptyIfNoUserAdded:" + this);
         var users = userService.getAll();
         assertThat(users).isEmpty();
@@ -115,7 +122,7 @@ public class UserServiceTest {
         //@Timeout(value = 200L, unit = TimeUnit.MILLISECONDS) the same, but asserts are better to read & understand.
          void checkLoginFunctionalityPerformance() {
             Optional<User> maybeUser = assertTimeout(Duration.ofMillis(200L), () -> {
-                Thread.sleep(300L);
+                Thread.sleep(100L);
                 return userService.login(IVAN.getUsername(), IVAN.getPassword());
             });
         }

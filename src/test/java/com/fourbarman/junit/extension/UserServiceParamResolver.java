@@ -1,4 +1,4 @@
-package com.fourbarman.junit.paramresolver;
+package com.fourbarman.junit.extension;
 
 import com.fourbarman.junit.service.UserService;
 import org.junit.jupiter.api.extension.ExtensionContext;
