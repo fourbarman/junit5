@@ -8,8 +8,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 
 
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.*;
@@ -98,12 +100,24 @@ public class UserServiceTest {
     @Tag("login")
     @DisplayName("Test user login functionality")
     class LoginTest {
-        @Test
-        void loginSuccessIfUserExists() {
+//        @Test
+        @RepeatedTest(value = 5, name = RepeatedTest.LONG_DISPLAY_NAME)
+        // injected RepetitionInfo - can be used as info about repetitions of test
+        void loginSuccessIfUserExists(RepetitionInfo repetitionInfo) {
             userService.add(IVAN);
             Optional<User> maybeUser = userService.login(IVAN.getUsername(), IVAN.getPassword());
             assertThat(maybeUser).isPresent();
             maybeUser.ifPresent(user -> assertThat(user).isEqualTo(IVAN));
+        }
+
+        @Test
+                //Timeouts great for acceptance tests, and sometimes - for integration tests.
+        //@Timeout(value = 200L, unit = TimeUnit.MILLISECONDS) the same, but asserts are better to read & understand.
+         void checkLoginFunctionalityPerformance() {
+            Optional<User> maybeUser = assertTimeout(Duration.ofMillis(200L), () -> {
+                Thread.sleep(300L);
+                return userService.login(IVAN.getUsername(), IVAN.getPassword());
+            });
         }
 
         @Test
