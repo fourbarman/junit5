@@ -7,6 +7,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
+import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -78,6 +79,9 @@ public class UserServiceTest extends TestBase {
 
     @Test
     void shouldDeleteExistedUSer() {
+//        BDDMockito.given(userDao.delete(IVAN.getId())).willReturn(true);
+//        or
+//        BDDMockito.willReturn(true).given(userDao).delete(IVAN.getId());
         userService.add(IVAN);
         boolean deleteResult = userService.delete(IVAN.getId());
         assertThat(deleteResult).isTrue();
